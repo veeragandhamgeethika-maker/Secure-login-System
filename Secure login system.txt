@@ -1,0 +1,42 @@
+from flask import Flask, render_template_string, request, redirect, url_for, session, flash
+from flask_bcrypt import Bcrypt
+from flask_session import Session
+import sqlite3
+import re
+import secrets
+import pyotp
+import smtplib
+from email.mime.text import MIMEText
+from datetime import timedelta
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = secrets.token_hex(32) # Random secret key
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30) # Session timeout
+Session(app)
+bcrypt = Bcrypt(app)
+
+DB_NAME = "users.db"
+
+# Email config for 2FA - Replace with your Gmail App Password for real use
+EMAIL_SENDER = "your_email@gmail.com" 
+EMAIL_PASSWORD = "your_app_password" # Use App Password, not normal password
+
+# HTML Templates
+REGISTER_HTML = """
+<!doctype html>
+<title>Register</title>
+<h2>Register</h2>
+<form method=post>
+  Username: <input name=username required><br><br>
+  Email: <input name=email type=email required><br><br>
+  Password: <input name=password type=password required><br><br>
+  <input type=submit value=Register>
+</form>
+<p>Already have an account? <a href="{{url_for('login')}}">Login</a></p>
+{% with messages = get_flashed_messages() %}{% if messages %}<p style="color:red">{{ messages[0] }}</p>{% endif %}{% endwith %}
+"""
+
+LOGIN_HTML = """
+<!doctype html>
+<title
